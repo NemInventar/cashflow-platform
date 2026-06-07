@@ -669,6 +669,7 @@ select.form-input{cursor:pointer}
 // STATE & DATA
 // =====================================================================
 const STORAGE_KEY = 'neminventar_cashflow_v2';
+const DATA_VERSION = 3;
 
 function genId() {
   return '_' + Math.random().toString(36).substr(2, 9);
@@ -679,6 +680,7 @@ function genId() {
 // PAGED Plywood betalt 03.06.2026 – fjernet fra engangsudgifter
 // Ason faktura 1.006.164 kr modtaget 02.06.2026 – fjernet fra fakturaer
 const DEFAULT_STATE = {
+  _version: 3,
   balance: 471233.69,
   eurRate: 7.46,
   investmentGoal: 2000000,
@@ -723,7 +725,11 @@ let state = loadState();
 function loadState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if ((parsed._version || 0) >= DATA_VERSION) return parsed;
+      // Outdated version: reset to new defaults automatically
+    }
   } catch(e) {}
   return JSON.parse(JSON.stringify(DEFAULT_STATE));
 }
