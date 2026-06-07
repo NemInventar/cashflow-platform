@@ -271,8 +271,8 @@ select.form-input{cursor:pointer}
       <div class="chart-header">
         <div class="chart-title">📈 Cashflow Projektion</div>
         <div class="chart-controls">
-          <button class="toggle-btn active" onclick="setMonths(6,this)">6 mdr</button>
-          <button class="toggle-btn" onclick="setMonths(12,this)">12 mdr</button>
+          <button class="toggle-btn" onclick="setMonths(6,this)">6 mdr</button>
+          <button class="toggle-btn active" onclick="setMonths(12,this)">12 mdr</button>
           <button class="toggle-btn" onclick="setMonths(24,this)">24 mdr</button>
         </div>
       </div>
@@ -844,7 +844,7 @@ function computeMonthlyData(numMonths = 12) {
 // CHART
 // =====================================================================
 let cashflowChart = null;
-let currentMonths = 6;
+let currentMonths = 12;
 
 function setMonths(n, btn) {
   currentMonths = n;
