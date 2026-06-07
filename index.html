@@ -700,13 +700,21 @@ const DEFAULT_STATE = {
     { id: genId(), name: 'Carveco (CNC design)', monthlyAmount: 116, currency: 'DKK', category: 'Software' },
     { id: genId(), name: 'NCS Colour AB', monthlyAmount: 94, currency: 'DKK', category: 'Software' }
   ],
-  projectExpenses: [],
+  projectExpenses: [
+    { id: genId(), name: 'Mørkhøj Skole Part 2 – Produktionsudgifter', monthlyAmount: 140000, currency: 'DKK', startDate: '2026-08', months: 5 },
+    { id: genId(), name: 'Mørkhøj Skole Part 2 – Leverandørgæld', monthlyAmount: 250000, currency: 'DKK', startDate: '2027-02', months: 1 },
+    { id: genId(), name: 'Daginstitution Vinge – Produktionsudgifter', monthlyAmount: 51406, currency: 'DKK', startDate: '2026-08', months: 3 }
+  ],
   oneTimeExpenses: [
-    { id: genId(), name: 'Transport – Mørkhøj Skole (Kosovo→DK)', amount: 2950, currency: 'EUR', date: '2026-06-15', category: 'Fragt' },
-    { id: genId(), name: 'Moms – Ason faktura (Q2)', amount: 200000, currency: 'DKK', date: '2026-08-31', category: 'Skat/Moms' }
+    { id: genId(), name: 'Transport – Mørkhøj Skole Part 1 (Kosovo→DK)', amount: 2950, currency: 'EUR', date: '2026-06-15', category: 'Fragt' },
+    { id: genId(), name: 'Moms – Ason faktura (Q2)', amount: 200000, currency: 'DKK', date: '2026-08-31', category: 'Skat/Moms' },
+    { id: genId(), name: 'Daginstitution Vinge – Produkttransport (Kosovo→DK)', amount: 8000, currency: 'DKK', date: '2026-10-15', category: 'Fragt' },
+    { id: genId(), name: 'Daginstitution Vinge – Labor + montage DK', amount: 50500, currency: 'DKK', date: '2026-11-01', category: 'Andet' }
   ],
   invoices: [
-    { id: genId(), name: 'Halbyg – Skohylde projekt', amount: 2300, currency: 'EUR', date: '2026-06-20', client: 'Halbyg', note: '' }
+    { id: genId(), name: 'Halbyg – Skohylde projekt', amount: 2300, currency: 'EUR', date: '2026-06-20', client: 'Halbyg', note: '' },
+    { id: genId(), name: 'Daginstitution Vinge – T01 (levering 20.11.2026)', amount: 377681, currency: 'DKK', date: '2026-11-20', client: 'Daginstitution Vinge', note: 'Ekskl. moms · 59% DB · kontaktperson: Joachim Skovbogaard' },
+    { id: genId(), name: 'Mørkhøj Skole Part 2 – faktura dec 2026 (betaling feb 2027)', amount: 1800000, currency: 'DKK', date: '2027-02-01', client: 'Mørkhøj Skole', note: 'Ekskl. moms · faktura sendt dec 2026 · ret beløb når kontrakt er underskrevet' }
   ]
 };
 
