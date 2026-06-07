@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NemInventar – Cashflow Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080c14;
+  --surface:#0f1623;
+  --card:#141d2e;
+  --card2:#1a2538;
+  --border:#1f2d42;
+  --border2:#263447;
+  --text:#e8eef6;
+  --muted:#6b7f9a;
+  --green:#22d47a;
+  --green-bg:rgba(34,212,122,0.08);
+  --red:#f05050;
+  --red-bg:rgba(240,80,80,0.08);
+  --blue:#4d9eff;
+  --blue-bg:rgba(77,158,255,0.08);
+  --yellow:#f5b942;
+  --yellow-bg:rgba(245,185,66,0.10);
+  --purple:#a78bfa;
+  --accent:#2563eb;
+  --radius:12px;
+}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;display:flex;min-height:100vh;overflow-x:hidden}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0;flex-shrink:0;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.logo{padding:22px 20px 18px;border-bottom:1px solid var(--border)}
+.logo .brand{font-size:15px;font-weight:700;color:var(--text);letter-spacing:0.3px}
+.logo .sub{font-size:11px;color:var(--muted);margin-top:2px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase}
+.nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--muted);transition:all .15s;margin-bottom:2px;user-select:none}
+.nav-item:hover{background:var(--card);color:var(--text)}
+.nav-item.active{background:rgba(37,99,235,0.15);color:var(--blue)}
+.nav-item .icon{font-size:16px;width:18px;text-align:center}
+.nav-section{padding:8px 12px 4px;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:8px}
+.sidebar-bottom{padding:14px;border-top:1px solid var(--border)}
+.eur-badge{background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--muted)}
+.eur-badge strong{color:var(--text);font-size:13px}
+
+/* MAIN */
+.main{margin-left:220px;flex:1;min-height:100vh;padding:28px 32px;max-width:1200px}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.page-title{font-size:22px;font-weight:700;color:var(--text)}
+.page-subtitle{font-size:13px;color:var(--muted);margin-top:3px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#1d4ed8}
+.btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--card2)}
+.btn-danger{background:rgba(240,80,80,0.1);color:var(--red);border:1px solid rgba(240,80,80,0.2)}
+.btn-danger:hover{background:rgba(240,80,80,0.2)}
+.btn-sm{padding:6px 11px;font-size:12px}
+
+/* METRICS CARDS */
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;cursor:pointer}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.metric-card.balance::before{background:linear-gradient(90deg,var(--blue),var(--purple))}
+.metric-card.income::before{background:linear-gradient(90deg,var(--green),#16a34a)}
+.metric-card.expense::before{background:linear-gradient(90deg,var(--red),#dc2626)}
+.metric-card.invest::before{background:linear-gradient(90deg,var(--yellow),#d97706)}
+.metric-label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:0.8px;text-transform:uppercase;margin-bottom:10px}
+.metric-value{font-size:24px;font-weight:800;letter-spacing:-0.5px;line-height:1}
+.metric-value.positive{color:var(--green)}
+.metric-value.negative{color:var(--red)}
+.metric-value.neutral{color:var(--text)}
+.metric-value.yellow{color:var(--yellow)}
+.metric-sub{font-size:11.5px;color:var(--muted);margin-top:7px}
+.metric-edit-hint{font-size:10px;color:var(--muted);margin-top:4px;opacity:.6}
+
+/* CHART SECTION */
+.chart-section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.chart-title{font-size:16px;font-weight:700}
+.chart-controls{display:flex;gap:8px}
+.toggle-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--muted);transition:all .15s}
+.toggle-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chart-wrap{position:relative;height:300px}
+
+/* MONTH STATUS GRID */
+.month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px}
+.month-cell{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center;position:relative;overflow:hidden}
+.month-cell::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.month-cell.green::after{background:var(--green)}
+.month-cell.yellow::after{background:var(--yellow)}
+.month-cell.red::after{background:var(--red)}
+.month-cell.deep-green::after{background:linear-gradient(90deg,var(--green),#16a34a)}
+.month-name{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.month-balance{font-size:14px;font-weight:800}
+.month-cell.green .month-balance{color:var(--green)}
+.month-cell.yellow .month-balance{color:var(--yellow)}
+.month-cell.red .month-balance{color:var(--red)}
+.month-cell.deep-green .month-balance{color:var(--green)}
+.month-status{font-size:10px;margin-top:5px;font-weight:600;letter-spacing:0.3px}
+.month-cell.deep-green .month-status{color:var(--green)}
+.month-cell.green .month-status{color:#60a5fa}
+.month-cell.yellow .month-status{color:var(--yellow)}
+.month-cell.red .month-status{color:var(--red)}
+
+/* TABLES */
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:18px;overflow:hidden}
+.section-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.section-head-title{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-red{background:var(--red-bg);color:var(--red);border:1px solid rgba(240,80,80,.2)}
+.badge-green{background:var(--green-bg);color:var(--green);border:1px solid rgba(34,212,122,.2)}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:1px solid rgba(77,158,255,.2)}
+.badge-yellow{background:var(--yellow-bg);color:var(--yellow);border:1px solid rgba(245,185,66,.2)}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;padding:10px 20px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:12px 20px;font-size:13.5px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--card2)}
+.amount-cell{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.amount-cell.neg{color:var(--red)}
+.amount-cell.pos{color:var(--green)}
+.action-cell{display:flex;gap:6px;justify-content:flex-end}
+.empty-state{padding:40px;text-align:center;color:var(--muted);font-size:14px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:16px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 25px 50px rgba(0,0,0,0.5)}
+.modal-header{padding:22px 24px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;padding:4px;line-height:1}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:22px 24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.form-group{margin-bottom:18px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:0.5px}
+.form-input{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;transition:border-color .15s}
+.form-input:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.currency-row{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+select.form-input{cursor:pointer}
+
+/* INVESTMENT PANEL */
+.invest-panel{background:linear-gradient(135deg,rgba(245,185,66,0.06) 0%,rgba(245,185,66,0.02) 100%);border:1px solid rgba(245,185,66,0.2);border-radius:var(--radius);padding:20px 24px;margin-bottom:24px}
+.invest-panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.invest-panel-title{font-size:15px;font-weight:700;color:var(--yellow);display:flex;align-items:center;gap:8px}
+.invest-months{display:flex;flex-wrap:wrap;gap:8px}
+.invest-month-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600}
+.invest-month-chip.ready{background:rgba(34,212,122,0.1);color:var(--green);border:1px solid rgba(34,212,122,0.25)}
+.invest-month-chip.close{background:rgba(245,185,66,0.1);color:var(--yellow);border:1px solid rgba(245,185,66,0.25)}
+.invest-month-chip.no{background:rgba(240,80,80,0.08);color:var(--red);border:1px solid rgba(240,80,80,0.2)}
+.invest-empty{color:var(--muted);font-size:13px}
+
+/* PAGE VISIBILITY */
+.page{display:none}
+.page.active{display:block}
+
+/* PROGRESS BAR */
+.progress-bar{height:6px;background:var(--border2);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
+
+/* CATEGORY TAG */
+.cat-tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:var(--card2);color:var(--muted)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* Responsive tweaks */
+@media(max-width:900px){
+  .metrics-grid{grid-template-columns:repeat(2,1fr)}
+  .month-grid{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:600px){
+  .sidebar{width:0;overflow:hidden}
+  .main{margin-left:0;padding:16px}
+  .metrics-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="brand">🏦 NemInventar</div>
+    <div class="sub">Cashflow Platform</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="icon">📊</span> Dashboard
+    </div>
+    <div class="nav-section">Udgifter</div>
+    <div class="nav-item" onclick="showPage('fixed')">
+      <span class="icon">🏢</span> Faste udgifter
+    </div>
+    <div class="nav-item" onclick="showPage('projects')">
+      <span class="icon">🔨</span> Projektudgifter
+    </div>
+    <div class="nav-item" onclick="showPage('onetime')">
+      <span class="icon">💸</span> Engangsudgifter
+    </div>
+    <div class="nav-section">Indkomst</div>
+    <div class="nav-item" onclick="showPage('invoices')">
+      <span class="icon">💰</span> Fakturaer &amp; Indkomst
+    </div>
+    <div class="nav-section">Investering</div>
+    <div class="nav-item" onclick="showPage('investment')">
+      <span class="icon">🏭</span> Kosovo Fabrik
+    </div>
+    <div class="nav-section">Indstillinger</div>
+    <div class="nav-item" onclick="showPage('settings')">
+      <span class="icon">⚙️</span> Indstillinger
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="eur-badge">
+      EUR rate: <strong id="sb-eur-rate">7.46</strong> kr
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dashboard" class="page active">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Cashflow Overblik</div>
+        <div class="page-subtitle" id="dash-date"></div>
+      </div>
+      <button class="btn btn-primary" onclick="openBalanceModal()">✏️ Opdater Balance</button>
+    </div>
+
+    <!-- METRIC CARDS -->
+    <div class="metrics-grid">
+      <div class="metric-card balance" onclick="openBalanceModal()" title="Klik for at opdatere">
+        <div class="metric-label">Nuværende Balance</div>
+        <div class="metric-value" id="m-balance">–</div>
+        <div class="metric-sub" id="m-balance-sub">–</div>
+        <div class="metric-edit-hint">Klik for at ændre →</div>
+      </div>
+      <div class="metric-card income">
+        <div class="metric-label">Kommende Indkomst</div>
+        <div class="metric-value positive" id="m-income">–</div>
+        <div class="metric-sub" id="m-income-sub">–</div>
+      </div>
+      <div class="metric-card expense">
+        <div class="metric-label">Månedlige Faste</div>
+        <div class="metric-value negative" id="m-fixed">–</div>
+        <div class="metric-sub" id="m-fixed-sub">–</div>
+      </div>
+      <div class="metric-card invest">
+        <div class="metric-label">Kosovo Fabrik Mål</div>
+        <div class="metric-value yellow" id="m-invest">–</div>
+        <div class="progress-bar"><div class="progress-fill" id="m-invest-bar" style="background:var(--yellow);width:0%"></div></div>
+        <div class="metric-sub" id="m-invest-sub">–</div>
+      </div>
+    </div>
+
+    <!-- CASHFLOW CHART -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="chart-title">📈 Cashflow Projektion</div>
+        <div class="chart-controls">
+          <button class="toggle-btn active" onclick="setMonths(6,this)">6 mdr</button>
+          <button class="toggle-btn" onclick="setMonths(12,this)">12 mdr</button>
+          <button class="toggle-btn" onclick="setMonths(24,this)">24 mdr</button>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="cashflow-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- MONTH STATUS GRID -->
+    <div id="month-grid" class="month-grid"></div>
+
+    <!-- INVESTMENT READINESS -->
+    <div class="invest-panel">
+      <div class="invest-panel-header">
+        <div class="invest-panel-title">🏭 <span id="inv-panel-label">Kosovo Fabrik</span> – Hvornår kan vi investere?</div>
+        <button class="btn btn-ghost btn-sm" onclick="showPage('investment')">Detaljer →</button>
+      </div>
+      <div id="invest-months" class="invest-months"></div>
+    </div>
+  </div>
+
+  <!-- FIXED EXPENSES PAGE -->
+  <div id="page-fixed" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">🏢 Faste Udgifter</div>
+        <div class="page-subtitle">Månedligt tilbagevendende udgifter</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('fixed')">+ Tilføj fast udgift</button>
+    </div>
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-head-title">Faste udgifter <span id="fixed-count" class="badge badge-red">0</span></div>
+        <span style="font-size:12px;color:var(--muted)" id="fixed-total-label">–</span>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Navn</th><th>Beløb/md</th><th>Kategori</th><th></th>
+        </tr></thead>
+        <tbody id="fixed-tbody"><tr><td colspan="4" class="empty-state">Ingen faste udgifter endnu</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PROJECT EXPENSES PAGE -->
+  <div id="page-projects" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">🔨 Projektudgifter</div>
+        <div class="page-subtitle">Tidsbegrænsede projektomkostninger</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('project')">+ Tilføj projekt</button>
+    </div>
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-head-title">Aktive projekter <span id="projects-count" class="badge badge-blue">0</span></div>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Projekt</th><th>Beløb/md</th><th>Start</th><th>Varighed</th><th>Total</th><th></th>
+        </tr></thead>
+        <tbody id="projects-tbody"><tr><td colspan="6" class="empty-state">Ingen projektudgifter endnu</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ONE-TIME EXPENSES PAGE -->
+  <div id="page-onetime" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">💸 Engangsudgifter</div>
+        <div class="page-subtitle">Engangsbetalinger og kommende regninger</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('onetime')">+ Tilføj udgift</button>
+    </div>
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-head-title">Kommende betalinger <span id="onetime-count" class="badge badge-red">0</span></div>
+        <span style="font-size:12px;color:var(--muted)" id="onetime-total-label">–</span>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Beskrivelse</th><th>Dato</th><th>Kategori</th><th>Beløb</th><th></th>
+        </tr></thead>
+        <tbody id="onetime-tbody"><tr><td colspan="5" class="empty-state">Ingen engangsudgifter</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- INVOICES PAGE -->
+  <div id="page-invoices" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">💰 Fakturaer &amp; Indkomst</div>
+        <div class="page-subtitle">Kommende indbetalinger og fakturaer</div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('invoice')">+ Tilføj faktura</button>
+    </div>
+    <div class="section-card">
+      <div class="section-head">
+        <div class="section-head-title">Kommende indkomst <span id="invoices-count" class="badge badge-green">0</span></div>
+        <span style="font-size:12px;color:var(--muted)" id="invoices-total-label">–</span>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Faktura / Kunde</th><th>Forfaldsdato</th><th>Note</th><th>Beløb</th><th></th>
+        </tr></thead>
+        <tbody id="invoices-tbody"><tr><td colspan="5" class="empty-state">Ingen fakturaer registreret</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- INVESTMENT PAGE -->
+  <div id="page-investment" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">🏭 Kosovo Fabrik Investering</div>
+        <div class="page-subtitle">Analyser hvornår investeringen er mulig</div>
+      </div>
+    </div>
+    <div class="metrics-grid" style="grid-template-columns:repeat(3,1fr)">
+      <div class="metric-card invest">
+        <div class="metric-label">Investerings Mål</div>
+        <div class="metric-value yellow" id="inv-goal-disp">–</div>
+        <div class="metric-sub">Nødvendig likviditet</div>
+      </div>
+      <div class="metric-card balance">
+        <div class="metric-label">Nuværende Balance</div>
+        <div class="metric-value" id="inv-cur-balance">–</div>
+        <div class="metric-sub">I dag</div>
+      </div>
+      <div class="metric-card income">
+        <div class="metric-label">Mangler stadig</div>
+        <div class="metric-value" id="inv-gap">–</div>
+        <div class="metric-sub" id="inv-gap-sub">–</div>
+      </div>
+    </div>
+    <div class="section-card" style="margin-bottom:18px">
+      <div class="section-head"><div class="section-head-title">📅 Månedsoverblik – Investerings-readiness</div></div>
+      <div id="inv-month-detail" style="padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-head"><div class="section-head-title">⚙️ Investerings Indstillinger</div></div>
+      <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="form-group">
+          <label class="form-label">Investerings navn</label>
+          <input class="form-input" id="inv-name-input" type="text" placeholder="Kosovo Fabrik">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Investerings beløb (DKK)</label>
+          <input class="form-input" id="inv-goal-input" type="number" placeholder="2000000">
+        </div>
+        <div style="grid-column:1/-1">
+          <button class="btn btn-primary" onclick="saveInvestmentSettings()">💾 Gem indstillinger</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PAGE -->
+  <div id="page-settings" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">⚙️ Indstillinger</div>
+        <div class="page-subtitle">Generelle konfigurationer</div>
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-head"><div class="section-head-title">Valuta &amp; Kurser</div></div>
+      <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:18px">
+        <div class="form-group">
+          <label class="form-label">EUR/DKK kurs</label>
+          <input class="form-input" id="eur-rate-input" type="number" step="0.01" placeholder="7.46">
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">Bruges til omregning af EUR beløb</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nuværende Balance (DKK)</label>
+          <input class="form-input" id="balance-input-settings" type="number" placeholder="471233">
+        </div>
+        <div style="grid-column:1/-1">
+          <button class="btn btn-primary" onclick="saveSettings()">💾 Gem indstillinger</button>
+          <button class="btn btn-ghost" onclick="resetData()" style="margin-left:10px">⚠️ Nulstil alle data</button>
+        </div>
+      </div>
+    </div>
+    <div class="section-card" style="margin-top:16px">
+      <div class="section-head"><div class="section-head-title">📂 Data Eksport/Import</div></div>
+      <div style="padding:20px;display:flex;gap:12px">
+        <button class="btn btn-ghost" onclick="exportData()">📥 Eksporter JSON</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('import-file').click()">📤 Importer JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODALS -->
+
+<!-- Balance Modal -->
+<div class="modal-overlay" id="balance-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Opdater nuværende balance</div>
+      <button class="modal-close" onclick="closeModal('balance-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Balance (DKK)</label>
+        <input class="form-input" id="bm-balance" type="number" placeholder="471233">
+        <div style="font-size:12px;color:var(--muted);margin-top:7px">Angiv din bankkonto saldo lige nu</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('balance-modal')">Annuller</button>
+      <button class="btn btn-primary" onclick="saveBalance()">Gem balance</button>
+    </div>
+  </div>
+</div>
+
+<!-- Fixed Expense Modal -->
+<div class="modal-overlay" id="fixed-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="fixed-modal-title">Tilføj fast udgift</div>
+      <button class="modal-close" onclick="closeModal('fixed-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="fm-id">
+      <div class="form-group">
+        <label class="form-label">Navn</label>
+        <input class="form-input" id="fm-name" type="text" placeholder="f.eks. Kontorleje">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Månedligt beløb</label>
+        <div class="currency-row">
+          <input class="form-input" id="fm-amount" type="number" placeholder="10000">
+          <select class="form-input" id="fm-currency">
+            <option value="DKK">DKK</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategori</label>
+        <select class="form-input" id="fm-category">
+          <option>Kontor</option>
+          <option>Løn</option>
+          <option>Forsikring</option>
+          <option>Transport</option>
+          <option>Software</option>
+          <option>Andet</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('fixed-modal')">Annuller</button>
+      <button class="btn btn-primary" onclick="saveFixed()">Gem</button>
+    </div>
+  </div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal-overlay" id="project-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="project-modal-title">Tilføj projektudgift</div>
+      <button class="modal-close" onclick="closeModal('project-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pm-id">
+      <div class="form-group">
+        <label class="form-label">Projektnavn</label>
+        <input class="form-input" id="pm-name" type="text" placeholder="f.eks. Kosovo produktion">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beløb per måned</label>
+        <div class="currency-row">
+          <input class="form-input" id="pm-amount" type="number" placeholder="100000">
+          <select class="form-input" id="pm-currency">
+            <option value="DKK">DKK</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Startmåned</label>
+          <input class="form-input" id="pm-start" type="month">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Antal måneder</label>
+          <input class="form-input" id="pm-duration" type="number" min="1" placeholder="5">
+        </div>
+      </div>
+      <div id="pm-total-preview" style="padding:12px;background:var(--card2);border-radius:8px;font-size:13px;color:var(--muted)">Total: –</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('project-modal')">Annuller</button>
+      <button class="btn btn-primary" onclick="saveProject()">Gem</button>
+    </div>
+  </div>
+</div>
+
+<!-- One-time Modal -->
+<div class="modal-overlay" id="onetime-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="onetime-modal-title">Tilføj engangsudgift</div>
+      <button class="modal-close" onclick="closeModal('onetime-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="om-id">
+      <div class="form-group">
+        <label class="form-label">Beskrivelse</label>
+        <input class="form-input" id="om-name" type="text" placeholder="f.eks. PAGED Plywood betaling">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Betalingsdato</label>
+        <input class="form-input" id="om-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beløb</label>
+        <div class="currency-row">
+          <input class="form-input" id="om-amount" type="number" placeholder="23000">
+          <select class="form-input" id="om-currency">
+            <option value="DKK">DKK</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kategori</label>
+        <select class="form-input" id="om-category">
+          <option>Leverandør</option>
+          <option>Fragt</option>
+          <option>Skat/Moms</option>
+          <option>Investering</option>
+          <option>Andet</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('onetime-modal')">Annuller</button>
+      <button class="btn btn-primary" onclick="saveOneTime()">Gem</button>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice Modal -->
+<div class="modal-overlay" id="invoice-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="invoice-modal-title">Tilføj faktura / indkomst</div>
+      <button class="modal-close" onclick="closeModal('invoice-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="im-id">
+      <div class="form-group">
+        <label class="form-label">Faktura / Beskrivelse</label>
+        <input class="form-input" id="im-name" type="text" placeholder="f.eks. Ason – Levering K24">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Kunde</label>
+        <input class="form-input" id="im-client" type="text" placeholder="f.eks. Ason">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Forfaldsdato (forventet betaling)</label>
+        <input class="form-input" id="im-date" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beløb</label>
+        <div class="currency-row">
+          <input class="form-input" id="im-amount" type="number" placeholder="800000">
+          <select class="form-input" id="im-currency">
+            <option value="DKK">DKK</option>
+            <option value="EUR">EUR</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note (valgfri)</label>
+        <input class="form-input" id="im-note" type="text" placeholder="f.eks. Inkl. 25% moms">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('invoice-modal')">Annuller</button>
+      <button class="btn btn-primary" onclick="saveInvoice()">Gem</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// STATE & DATA
+// =====================================================================
+const STORAGE_KEY = 'neminventar_cashflow_v2';
+
+function genId() {
+  return '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Opdateret med data fra kontoudtog (04.06.2026)
+// Balance: 471.233,69 kr (seneste saldo)
+// PAGED Plywood betalt 03.06.2026 – fjernet fra engangsudgifter
+// Ason faktura 1.006.164 kr modtaget 02.06.2026 – fjernet fra fakturaer
+const DEFAULT_STATE = {
+  balance: 471233.69,
+  eurRate: 7.46,
+  investmentGoal: 2000000,
+  investmentLabel: 'Kosovo Fabrik',
+  fixedExpenses: [
+    { id: genId(), name: 'Kontorleje (Caspian Ejendomme)', monthlyAmount: 11150, currency: 'DKK', category: 'Kontor' },
+    { id: genId(), name: 'Løn Christian (netto)', monthlyAmount: 18902, currency: 'DKK', category: 'Løn' },
+    { id: genId(), name: 'A-skat/AM-bidrag – Christian', monthlyAmount: 7699, currency: 'DKK', category: 'Løn' },
+    { id: genId(), name: 'LS Byggefakta A/S', monthlyAmount: 4228, currency: 'DKK', category: 'Software' },
+    { id: genId(), name: 'TRYG Forsikring', monthlyAmount: 2183, currency: 'DKK', category: 'Forsikring' },
+    { id: genId(), name: 'Claude Team (Anthropic)', monthlyAmount: 1432, currency: 'DKK', category: 'Software' },
+    { id: genId(), name: 'Microsoft 365 (samlet)', monthlyAmount: 670, currency: 'DKK', category: 'Software' },
+    { id: genId(), name: 'e-conomic.dk', monthlyAmount: 499, currency: 'DKK', category: 'Software' },
+    { id: genId(), name: 'ClickUp', monthlyAmount: 372, currency: 'DKK', category: 'Software' },
+    { id: genId(), name: 'GitHub', monthlyAmount: 319, currency: 'DKK', category: 'Software' },
+    { id: genId(), name: 'Supabase', monthlyAmount: 295, currency: 'DKK', category: 'Software' },
+    { id: genId(), name: 'CBB Mobil', monthlyAmount: 199, currency: 'DKK', category: 'Andet' },
+    { id: genId(), name: 'OpenAI ChatGPT', monthlyAmount: 139, currency: 'DKK', category: 'Software' },
+    { id: genId(), name: 'Carveco (CNC design)', monthlyAmount: 116, currency: 'DKK', category: 'Software' },
+    { id: genId(), name: 'NCS Colour AB', monthlyAmount: 94, currency: 'DKK', category: 'Software' }
+  ],
+  projectExpenses: [],
+  oneTimeExpenses: [
+    { id: genId(), name: 'Transport – Mørkhøj Skole (Kosovo→DK)', amount: 2950, currency: 'EUR', date: '2026-06-15', category: 'Fragt' },
+    { id: genId(), name: 'Moms – Ason faktura (Q2)', amount: 200000, currency: 'DKK', date: '2026-08-31', category: 'Skat/Moms' }
+  ],
+  invoices: [
+    { id: genId(), name: 'Halbyg – Skohylde projekt', amount: 2300, currency: 'EUR', date: '2026-06-20', client: 'Halbyg', note: '' }
+  ]
+};
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// =====================================================================
+// HELPERS
+// =====================================================================
+function toDKK(amount, currency) {
+  return currency === 'EUR' ? amount * state.eurRate : amount;
+}
+
+function fmtDKK(val, alwaysSign = false) {
+  const abs = Math.abs(val);
+  const sign = val < 0 ? '−' : (alwaysSign ? '+' : '');
+  if (abs >= 1000000) return sign + (abs / 1000000).toFixed(2).replace('.', ',') + ' mio kr';
+  if (abs >= 1000) return sign + Math.round(abs).toLocaleString('da-DK') + ' kr';
+  return sign + Math.round(abs).toLocaleString('da-DK') + ' kr';
+}
+
+function fmtAmount(amount, currency) {
+  const sym = currency === 'EUR' ? '€' : 'kr';
+  if (Math.abs(amount) >= 1000) return amount.toLocaleString('da-DK') + ' ' + sym;
+  return amount + ' ' + sym;
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '–';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function monthLabel(year, month) {
+  const d = new Date(year, month, 1);
+  return d.toLocaleDateString('da-DK', { month: 'short', year: '2-digit' }).replace(' ', ' \'');
+}
+
+function monthKey(year, month) { return `${year}-${String(month+1).padStart(2,'0')}`; }
+
+// =====================================================================
+// CASHFLOW COMPUTATION
+// =====================================================================
+function computeMonthlyData(numMonths = 12) {
+  const now = new Date();
+  const startYear = now.getFullYear();
+  const startMonth = now.getMonth();
+
+  const months = [];
+  for (let i = 0; i < numMonths; i++) {
+    const totalMonth = startMonth + i;
+    const year = startYear + Math.floor(totalMonth / 12);
+    const month = totalMonth % 12;
+    months.push({
+      year, month,
+      label: monthLabel(year, month),
+      key: monthKey(year, month),
+      income: 0,
+      expenses: 0,
+      startBalance: 0,
+      endBalance: 0
+    });
+  }
+
+  // Fixed expenses
+  state.fixedExpenses.forEach(fe => {
+    const dkk = toDKK(fe.monthlyAmount, fe.currency);
+    months.forEach(m => { m.expenses += dkk; });
+  });
+
+  // Project expenses
+  state.projectExpenses.forEach(pe => {
+    const [pYear, pMonth] = pe.startDate.split('-').map(Number);
+    const startMonthIdx = pMonth - 1;
+    for (let i = 0; i < pe.months; i++) {
+      const targetTotal = (pYear - startYear) * 12 + startMonthIdx + i - startMonth;
+      if (targetTotal >= 0 && targetTotal < numMonths) {
+        months[targetTotal].expenses += toDKK(pe.monthlyAmount, pe.currency);
+      }
+    }
+  });
+
+  // One-time expenses
+  state.oneTimeExpenses.forEach(oe => {
+    const d = new Date(oe.date + 'T12:00:00');
+    const idx = (d.getFullYear() - startYear) * 12 + d.getMonth() - startMonth;
+    if (idx >= 0 && idx < numMonths) months[idx].expenses += toDKK(oe.amount, oe.currency);
+  });
+
+  // Invoices
+  state.invoices.forEach(inv => {
+    const d = new Date(inv.date + 'T12:00:00');
+    const idx = (d.getFullYear() - startYear) * 12 + d.getMonth() - startMonth;
+    if (idx >= 0 && idx < numMonths) months[idx].income += toDKK(inv.amount, inv.currency);
+  });
+
+  // Running balance
+  let bal = state.balance;
+  months.forEach(m => {
+    m.startBalance = bal;
+    bal += m.income - m.expenses;
+    m.endBalance = bal;
+  });
+
+  return months;
+}
+
+// =====================================================================
+// CHART
+// =====================================================================
+let cashflowChart = null;
+let currentMonths = 6;
+
+function setMonths(n, btn) {
+  currentMonths = n;
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderChart();
+}
+
+function renderChart() {
+  const data = computeMonthlyData(currentMonths);
+  const labels = data.map(m => m.label);
+  const incomes = data.map(m => m.income);
+  const expenses = data.map(m => -m.expenses);
+  const balances = data.map(m => m.endBalance);
+  const investGoal = Array(currentMonths).fill(state.investmentGoal);
+
+  const ctx = document.getElementById('cashflow-chart').getContext('2d');
+
+  if (cashflowChart) cashflowChart.destroy();
+
+  cashflowChart = new Chart(ctx, {
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Indkomst',
+          data: incomes,
+          backgroundColor: 'rgba(34,212,122,0.25)',
+          borderColor: 'rgba(34,212,122,0.7)',
+          borderWidth: 1.5,
+          borderRadius: 6,
+          order: 2
+        },
+        {
+          type: 'bar',
+          label: 'Udgifter',
+          data: expenses,
+          backgroundColor: 'rgba(240,80,80,0.22)',
+          borderColor: 'rgba(240,80,80,0.6)',
+          borderWidth: 1.5,
+          borderRadius: 6,
+          order: 2
+        },
+        {
+          type: 'line',
+          label: 'Balance',
+          data: balances,
+          borderColor: '#4d9eff',
+          backgroundColor: 'rgba(77,158,255,0.07)',
+          borderWidth: 2.5,
+          pointBackgroundColor: balances.map(v => v >= 0 ? '#22d47a' : '#f05050'),
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          fill: true,
+          tension: 0.3,
+          order: 1
+        },
+        {
+          type: 'line',
+          label: state.investmentLabel + ' mål',
+          data: investGoal,
+          borderColor: 'rgba(245,185,66,0.5)',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          pointRadius: 0,
+          fill: false,
+          order: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            color: '#6b7f9a',
+            font: { size: 12 },
+            usePointStyle: true,
+            boxWidth: 8,
+            padding: 16
+          }
+        },
+        tooltip: {
+          backgroundColor: '#1a2538',
+          borderColor: '#263447',
+          borderWidth: 1,
+          titleColor: '#e8eef6',
+          bodyColor: '#9ca3af',
+          padding: 12,
+          callbacks: {
+            label: ctx => {
+              const val = ctx.parsed.y;
+              const abs = Math.abs(val);
+              const sign = val < 0 ? '−' : (val > 0 ? '+' : '');
+              return ` ${ctx.dataset.label}: ${sign}${Math.round(abs).toLocaleString('da-DK')} kr`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: '#6b7f9a', font: { size: 12 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: {
+            color: '#6b7f9a',
+            font: { size: 11 },
+            callback: v => {
+              if (Math.abs(v) >= 1000000) return (v/1000000).toFixed(1) + ' mio';
+              if (Math.abs(v) >= 1000) return (v/1000).toFixed(0) + 'k';
+              return v;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// =====================================================================
+// MONTH STATUS GRID
+// =====================================================================
+function renderMonthGrid() {
+  const data = computeMonthlyData(12);
+  const grid = document.getElementById('month-grid');
+  grid.innerHTML = '';
+
+  data.forEach(m => {
+    const bal = m.endBalance;
+    let cls, statusText;
+    if (bal >= state.investmentGoal) {
+      cls = 'deep-green'; statusText = '✅ Klar til invest.';
+    } else if (bal >= state.investmentGoal * 0.5) {
+      cls = 'green'; statusText = '💡 Halvvejs der';
+    } else if (bal >= 0) {
+      cls = 'yellow'; statusText = '⚠️ Positiv, men knap';
+    } else {
+      cls = 'red'; statusText = '🔴 Negativ balance';
+    }
+
+    const cell = document.createElement('div');
+    cell.className = `month-cell ${cls}`;
+    cell.innerHTML = `
+      <div class="month-name">${m.label}</div>
+      <div class="month-balance">${fmtDKK(bal)}</div>
+      <div class="month-status">${statusText}</div>
+    `;
+    grid.appendChild(cell);
+  });
+}
+
+// =====================================================================
+// INVESTMENT READINESS
+// =====================================================================
+function renderInvestmentReadiness() {
+  const data = computeMonthlyData(24);
+  const invMonths = document.getElementById('invest-months');
+  invMonths.innerHTML = '';
+  document.getElementById('inv-panel-label').textContent = state.investmentLabel;
+
+  data.forEach(m => {
+    const bal = m.endBalance;
+    let cls, icon;
+    if (bal >= state.investmentGoal) {
+      cls = 'ready'; icon = '✅';
+    } else if (bal >= state.investmentGoal * 0.7) {
+      cls = 'close'; icon = '💡';
+    } else {
+      return;
+    }
+    const chip = document.createElement('div');
+    chip.className = `invest-month-chip ${cls}`;
+    chip.innerHTML = `${icon} ${m.label} → ${fmtDKK(bal)}`;
+    invMonths.appendChild(chip);
+  });
+
+  if (invMonths.children.length === 0) {
+    invMonths.innerHTML = '<span class="invest-empty">Ingen måneder indenfor 24 mdr. når investeringsmålet. Tjek indkomst eller sæt målet lavere.</span>';
+  }
+}
+
+// =====================================================================
+// METRICS
+// =====================================================================
+function renderMetrics() {
+  const bal = state.balance;
+  const balEl = document.getElementById('m-balance');
+  balEl.textContent = fmtDKK(bal);
+  balEl.className = 'metric-value ' + (bal >= 0 ? 'positive' : 'negative');
+  document.getElementById('m-balance-sub').textContent = bal >= 0 ? 'Positiv likviditet' : 'Negativ likviditet';
+
+  const futureIncome = state.invoices.reduce((s, inv) => s + toDKK(inv.amount, inv.currency), 0);
+  document.getElementById('m-income').textContent = fmtDKK(futureIncome);
+  document.getElementById('m-income-sub').textContent = `${state.invoices.length} kommende faktura${state.invoices.length !== 1 ? 'er' : ''}`;
+
+  const monthlyFixed = state.fixedExpenses.reduce((s, fe) => s + toDKK(fe.monthlyAmount, fe.currency), 0);
+  document.getElementById('m-fixed').textContent = fmtDKK(monthlyFixed);
+  document.getElementById('m-fixed-sub').textContent = `${state.fixedExpenses.length} faste poster/md`;
+
+  const goal = state.investmentGoal;
+  const data = computeMonthlyData(24);
+  const peakBalance = Math.max(...data.map(m => m.endBalance));
+  const pct = Math.min(100, Math.max(0, (peakBalance / goal) * 100));
+  document.getElementById('m-invest').textContent = fmtDKK(goal);
+  document.getElementById('m-invest-bar').style.width = pct + '%';
+  document.getElementById('m-invest-sub').textContent = `Maks. saldo: ${fmtDKK(peakBalance)} (${Math.round(pct)}% af mål)`;
+
+  document.getElementById('inv-goal-disp').textContent = fmtDKK(goal);
+  document.getElementById('inv-cur-balance').textContent = fmtDKK(bal);
+  document.getElementById('inv-cur-balance').className = 'metric-value ' + (bal >= 0 ? 'positive' : 'negative');
+  const gap = goal - bal;
+  document.getElementById('inv-gap').textContent = gap > 0 ? fmtDKK(gap) : '✅ Nået!';
+  document.getElementById('inv-gap').className = 'metric-value ' + (gap > 0 ? 'negative' : 'positive');
+  document.getElementById('inv-gap-sub').textContent = gap > 0 ? 'Endnu ikke opnået' : 'Balance > investerings mål';
+
+  document.getElementById('sb-eur-rate').textContent = state.eurRate.toFixed(2);
+}
+
+// =====================================================================
+// INVESTMENT PAGE DETAIL
+// =====================================================================
+function renderInvestmentPage() {
+  const data = computeMonthlyData(24);
+  const container = document.getElementById('inv-month-detail');
+  container.innerHTML = '';
+
+  data.forEach(m => {
+    const bal = m.endBalance;
+    let border, icon, statusTxt, statusColor;
+    if (bal >= state.investmentGoal) {
+      border = 'var(--green)'; icon = '✅'; statusTxt = 'Klar til investering'; statusColor = 'var(--green)';
+    } else if (bal > 0) {
+      const pct = Math.round((bal / state.investmentGoal) * 100);
+      border = 'var(--yellow)'; icon = '⏳'; statusTxt = `${pct}% af mål`; statusColor = 'var(--yellow)';
+    } else {
+      border = 'var(--red)'; icon = '🔴'; statusTxt = 'Negativ balance'; statusColor = 'var(--red)';
+    }
+
+    const card = document.createElement('div');
+    card.style.cssText = `background:var(--card2);border:1px solid ${border}22;border-left:3px solid ${border};border-radius:10px;padding:14px;`;
+    card.innerHTML = `
+      <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">${m.label}</div>
+      <div style="font-size:18px;font-weight:800;color:${border};margin-bottom:4px">${fmtDKK(bal)}</div>
+      <div style="font-size:11px;color:${statusColor};font-weight:600">${icon} ${statusTxt}</div>
+      ${m.income > 0 ? `<div style="font-size:11px;color:var(--green);margin-top:4px">+${fmtDKK(m.income)} indkomst</div>` : ''}
+      ${m.expenses > 0 ? `<div style="font-size:11px;color:var(--red);margin-top:2px">−${fmtDKK(m.expenses)} udgifter</div>` : ''}
+    `;
+    container.appendChild(card);
+  });
+
+  document.getElementById('inv-name-input').value = state.investmentLabel;
+  document.getElementById('inv-goal-input').value = state.investmentGoal;
+}
+
+// =====================================================================
+// TABLES
+// =====================================================================
+function renderFixedTable() {
+  const tbody = document.getElementById('fixed-tbody');
+  const data = state.fixedExpenses;
+  document.getElementById('fixed-count').textContent = data.length;
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Ingen faste udgifter endnu</td></tr>';
+    document.getElementById('fixed-total-label').textContent = '';
+    return;
+  }
+
+  const total = data.reduce((s, fe) => s + toDKK(fe.monthlyAmount, fe.currency), 0);
+  document.getElementById('fixed-total-label').textContent = `Total: ${fmtDKK(total)}/md`;
+
+  tbody.innerHTML = data.map(fe => `
+    <tr>
+      <td><strong>${fe.name}</strong></td>
+      <td class="amount-cell neg">−${fmtAmount(fe.monthlyAmount, fe.currency)}</td>
+      <td><span class="cat-tag">${fe.category || 'Andet'}</span></td>
+      <td>
+        <div class="action-cell">
+          <button class="btn btn-ghost btn-sm" onclick="editFixed('${fe.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteFixed('${fe.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderProjectsTable() {
+  const tbody = document.getElementById('projects-tbody');
+  const data = state.projectExpenses;
+  document.getElementById('projects-count').textContent = data.length;
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Ingen projektudgifter endnu. Tilføj et projekt for at se det i cashflow.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(pe => {
+    const total = toDKK(pe.monthlyAmount, pe.currency) * pe.months;
+    const [y, m] = pe.startDate.split('-');
+    const startLabel = new Date(parseInt(y), parseInt(m)-1, 1).toLocaleDateString('da-DK', {month:'short', year:'numeric'});
+    return `
+      <tr>
+        <td><strong>${pe.name}</strong></td>
+        <td class="amount-cell neg">−${fmtAmount(pe.monthlyAmount, pe.currency)}</td>
+        <td>${startLabel}</td>
+        <td>${pe.months} mdr.</td>
+        <td class="amount-cell neg">−${fmtDKK(total)}</td>
+        <td>
+          <div class="action-cell">
+            <button class="btn btn-ghost btn-sm" onclick="editProject('${pe.id}')">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProject('${pe.id}')">🗑</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderOneTimeTable() {
+  const tbody = document.getElementById('onetime-tbody');
+  const data = [...state.oneTimeExpenses].sort((a,b) => new Date(a.date) - new Date(b.date));
+  document.getElementById('onetime-count').textContent = data.length;
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Ingen engangsudgifter</td></tr>';
+    document.getElementById('onetime-total-label').textContent = '';
+    return;
+  }
+
+  const total = data.reduce((s, oe) => s + toDKK(oe.amount, oe.currency), 0);
+  document.getElementById('onetime-total-label').textContent = `Total: ${fmtDKK(total)}`;
+
+  tbody.innerHTML = data.map(oe => `
+    <tr>
+      <td><strong>${oe.name}</strong></td>
+      <td style="color:var(--muted)">${fmtDate(oe.date)}</td>
+      <td><span class="cat-tag">${oe.category || 'Andet'}</span></td>
+      <td class="amount-cell neg">−${fmtAmount(oe.amount, oe.currency)}</td>
+      <td>
+        <div class="action-cell">
+          <button class="btn btn-ghost btn-sm" onclick="editOneTime('${oe.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteOneTime('${oe.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderInvoicesTable() {
+  const tbody = document.getElementById('invoices-tbody');
+  const data = [...state.invoices].sort((a,b) => new Date(a.date) - new Date(b.date));
+  document.getElementById('invoices-count').textContent = data.length;
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Ingen fakturaer registreret</td></tr>';
+    document.getElementById('invoices-total-label').textContent = '';
+    return;
+  }
+
+  const total = data.reduce((s, inv) => s + toDKK(inv.amount, inv.currency), 0);
+  document.getElementById('invoices-total-label').textContent = `Total: ${fmtDKK(total)}`;
+
+  tbody.innerHTML = data.map(inv => `
+    <tr>
+      <td>
+        <strong>${inv.name}</strong>
+        ${inv.client ? `<div style="font-size:12px;color:var(--muted)">${inv.client}</div>` : ''}
+      </td>
+      <td style="color:var(--muted)">${fmtDate(inv.date)}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:200px">${inv.note || '–'}</td>
+      <td class="amount-cell pos">+${fmtAmount(inv.amount, inv.currency)}</td>
+      <td>
+        <div class="action-cell">
+          <button class="btn btn-ghost btn-sm" onclick="editInvoice('${inv.id}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteInvoice('${inv.id}')">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// =====================================================================
+// FULL RENDER
+// =====================================================================
+function renderAll() {
+  renderMetrics();
+  renderChart();
+  renderMonthGrid();
+  renderInvestmentReadiness();
+  renderFixedTable();
+  renderProjectsTable();
+  renderOneTimeTable();
+  renderInvoicesTable();
+  renderInvestmentPage();
+  document.getElementById('eur-rate-input').value = state.eurRate;
+  document.getElementById('balance-input-settings').value = state.balance;
+}
+
+// =====================================================================
+// PAGE NAVIGATION
+// =====================================================================
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.currentTarget?.classList.add('active');
+  if (name === 'investment') renderInvestmentPage();
+}
+
+// =====================================================================
+// MODALS
+// =====================================================================
+function openModal(type) {
+  if (type === 'fixed') {
+    document.getElementById('fixed-modal-title').textContent = 'Tilføj fast udgift';
+    document.getElementById('fm-id').value = '';
+    document.getElementById('fm-name').value = '';
+    document.getElementById('fm-amount').value = '';
+    document.getElementById('fm-currency').value = 'DKK';
+    document.getElementById('fm-category').value = 'Kontor';
+    document.getElementById('fixed-modal').classList.add('open');
+  } else if (type === 'project') {
+    document.getElementById('project-modal-title').textContent = 'Tilføj projektudgift';
+    document.getElementById('pm-id').value = '';
+    document.getElementById('pm-name').value = '';
+    document.getElementById('pm-amount').value = '';
+    document.getElementById('pm-currency').value = 'DKK';
+    document.getElementById('pm-start').value = new Date().toISOString().substr(0,7);
+    document.getElementById('pm-duration').value = '';
+    document.getElementById('pm-total-preview').textContent = 'Total: –';
+    document.getElementById('project-modal').classList.add('open');
+  } else if (type === 'onetime') {
+    document.getElementById('onetime-modal-title').textContent = 'Tilføj engangsudgift';
+    document.getElementById('om-id').value = '';
+    document.getElementById('om-name').value = '';
+    document.getElementById('om-date').value = new Date().toISOString().substr(0,10);
+    document.getElementById('om-amount').value = '';
+    document.getElementById('om-currency').value = 'DKK';
+    document.getElementById('om-category').value = 'Leverandør';
+    document.getElementById('onetime-modal').classList.add('open');
+  } else if (type === 'invoice') {
+    document.getElementById('invoice-modal-title').textContent = 'Tilføj faktura / indkomst';
+    document.getElementById('im-id').value = '';
+    document.getElementById('im-name').value = '';
+    document.getElementById('im-client').value = '';
+    document.getElementById('im-date').value = new Date().toISOString().substr(0,10);
+    document.getElementById('im-amount').value = '';
+    document.getElementById('im-currency').value = 'DKK';
+    document.getElementById('im-note').value = '';
+    document.getElementById('invoice-modal').classList.add('open');
+  }
+}
+
+function openBalanceModal() {
+  document.getElementById('bm-balance').value = state.balance;
+  document.getElementById('balance-modal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// =====================================================================
+// SAVE ACTIONS
+// =====================================================================
+function saveBalance() {
+  const val = parseFloat(document.getElementById('bm-balance').value);
+  if (isNaN(val)) return alert('Angiv en gyldig balance');
+  state.balance = val;
+  saveState();
+  renderAll();
+  closeModal('balance-modal');
+}
+
+function saveFixed() {
+  const id = document.getElementById('fm-id').value;
+  const name = document.getElementById('fm-name').value.trim();
+  const amount = parseFloat(document.getElementById('fm-amount').value);
+  const currency = document.getElementById('fm-currency').value;
+  const category = document.getElementById('fm-category').value;
+  if (!name || isNaN(amount)) return alert('Udfyld navn og beløb');
+  if (id) {
+    const item = state.fixedExpenses.find(f => f.id === id);
+    Object.assign(item, { name, monthlyAmount: amount, currency, category });
+  } else {
+    state.fixedExpenses.push({ id: genId(), name, monthlyAmount: amount, currency, category });
+  }
+  saveState(); renderAll(); closeModal('fixed-modal');
+}
+
+function editFixed(id) {
+  const item = state.fixedExpenses.find(f => f.id === id);
+  document.getElementById('fixed-modal-title').textContent = 'Rediger fast udgift';
+  document.getElementById('fm-id').value = id;
+  document.getElementById('fm-name').value = item.name;
+  document.getElementById('fm-amount').value = item.monthlyAmount;
+  document.getElementById('fm-currency').value = item.currency;
+  document.getElementById('fm-category').value = item.category || 'Kontor';
+  document.getElementById('fixed-modal').classList.add('open');
+}
+
+function deleteFixed(id) {
+  if (!confirm('Slet denne faste udgift?')) return;
+  state.fixedExpenses = state.fixedExpenses.filter(f => f.id !== id);
+  saveState(); renderAll();
+}
+
+function saveProject() {
+  const id = document.getElementById('pm-id').value;
+  const name = document.getElementById('pm-name').value.trim();
+  const amount = parseFloat(document.getElementById('pm-amount').value);
+  const currency = document.getElementById('pm-currency').value;
+  const startDate = document.getElementById('pm-start').value;
+  const months = parseInt(document.getElementById('pm-duration').value);
+  if (!name || isNaN(amount) || !startDate || isNaN(months)) return alert('Udfyld alle felter');
+  if (id) {
+    const item = state.projectExpenses.find(p => p.id === id);
+    Object.assign(item, { name, monthlyAmount: amount, currency, startDate, months });
+  } else {
+    state.projectExpenses.push({ id: genId(), name, monthlyAmount: amount, currency, startDate, months });
+  }
+  saveState(); renderAll(); closeModal('project-modal');
+}
+
+function editProject(id) {
+  const item = state.projectExpenses.find(p => p.id === id);
+  document.getElementById('project-modal-title').textContent = 'Rediger projektudgift';
+  document.getElementById('pm-id').value = id;
+  document.getElementById('pm-name').value = item.name;
+  document.getElementById('pm-amount').value = item.monthlyAmount;
+  document.getElementById('pm-currency').value = item.currency;
+  document.getElementById('pm-start').value = item.startDate;
+  document.getElementById('pm-duration').value = item.months;
+  updateProjectTotal();
+  document.getElementById('project-modal').classList.add('open');
+}
+
+function deleteProject(id) {
+  if (!confirm('Slet dette projekt?')) return;
+  state.projectExpenses = state.projectExpenses.filter(p => p.id !== id);
+  saveState(); renderAll();
+}
+
+function updateProjectTotal() {
+  const amount = parseFloat(document.getElementById('pm-amount').value);
+  const currency = document.getElementById('pm-currency').value;
+  const months = parseInt(document.getElementById('pm-duration').value);
+  if (!isNaN(amount) && !isNaN(months)) {
+    const total = toDKK(amount, currency) * months;
+    document.getElementById('pm-total-preview').innerHTML = `<strong>Total projektomkostning: ${fmtDKK(total)}</strong> (${months} × ${fmtAmount(amount, currency)})`;
+  }
+}
+document.getElementById('pm-amount').addEventListener('input', updateProjectTotal);
+document.getElementById('pm-duration').addEventListener('input', updateProjectTotal);
+document.getElementById('pm-currency').addEventListener('change', updateProjectTotal);
+
+function saveOneTime() {
+  const id = document.getElementById('om-id').value;
+  const name = document.getElementById('om-name').value.trim();
+  const date = document.getElementById('om-date').value;
+  const amount = parseFloat(document.getElementById('om-amount').value);
+  const currency = document.getElementById('om-currency').value;
+  const category = document.getElementById('om-category').value;
+  if (!name || !date || isNaN(amount)) return alert('Udfyld alle felter');
+  if (id) {
+    const item = state.oneTimeExpenses.find(o => o.id === id);
+    Object.assign(item, { name, date, amount, currency, category });
+  } else {
+    state.oneTimeExpenses.push({ id: genId(), name, date, amount, currency, category });
+  }
+  saveState(); renderAll(); closeModal('onetime-modal');
+}
+
+function editOneTime(id) {
+  const item = state.oneTimeExpenses.find(o => o.id === id);
+  document.getElementById('onetime-modal-title').textContent = 'Rediger engangsudgift';
+  document.getElementById('om-id').value = id;
+  document.getElementById('om-name').value = item.name;
+  document.getElementById('om-date').value = item.date;
+  document.getElementById('om-amount').value = item.amount;
+  document.getElementById('om-currency').value = item.currency;
+  document.getElementById('om-category').value = item.category || 'Leverandør';
+  document.getElementById('onetime-modal').classList.add('open');
+}
+
+function deleteOneTime(id) {
+  if (!confirm('Slet denne udgift?')) return;
+  state.oneTimeExpenses = state.oneTimeExpenses.filter(o => o.id !== id);
+  saveState(); renderAll();
+}
+
+function saveInvoice() {
+  const id = document.getElementById('im-id').value;
+  const name = document.getElementById('im-name').value.trim();
+  const client = document.getElementById('im-client').value.trim();
+  const date = document.getElementById('im-date').value;
+  const amount = parseFloat(document.getElementById('im-amount').value);
+  const currency = document.getElementById('im-currency').value;
+  const note = document.getElementById('im-note').value.trim();
+  if (!name || !date || isNaN(amount)) return alert('Udfyld navn, dato og beløb');
+  if (id) {
+    const item = state.invoices.find(i => i.id === id);
+    Object.assign(item, { name, client, date, amount, currency, note });
+  } else {
+    state.invoices.push({ id: genId(), name, client, date, amount, currency, note });
+  }
+  saveState(); renderAll(); closeModal('invoice-modal');
+}
+
+function editInvoice(id) {
+  const item = state.invoices.find(i => i.id === id);
+  document.getElementById('invoice-modal-title').textContent = 'Rediger faktura';
+  document.getElementById('im-id').value = id;
+  document.getElementById('im-name').value = item.name;
+  document.getElementById('im-client').value = item.client || '';
+  document.getElementById('im-date').value = item.date;
+  document.getElementById('im-amount').value = item.amount;
+  document.getElementById('im-currency').value = item.currency;
+  document.getElementById('im-note').value = item.note || '';
+  document.getElementById('invoice-modal').classList.add('open');
+}
+
+function deleteInvoice(id) {
+  if (!confirm('Slet denne faktura?')) return;
+  state.invoices = state.invoices.filter(i => i.id !== id);
+  saveState(); renderAll();
+}
+
+function saveInvestmentSettings() {
+  const name = document.getElementById('inv-name-input').value.trim();
+  const goal = parseFloat(document.getElementById('inv-goal-input').value);
+  if (!name || isNaN(goal)) return alert('Udfyld navn og beløb');
+  state.investmentLabel = name;
+  state.investmentGoal = goal;
+  saveState(); renderAll();
+  alert('Investerings indstillinger gemt ✅');
+}
+
+function saveSettings() {
+  const rate = parseFloat(document.getElementById('eur-rate-input').value);
+  const bal = parseFloat(document.getElementById('balance-input-settings').value);
+  if (!isNaN(rate)) state.eurRate = rate;
+  if (!isNaN(bal)) state.balance = bal;
+  saveState(); renderAll();
+  alert('Indstillinger gemt ✅');
+}
+
+function resetData() {
+  if (!confirm('Er du sikker? Alle data nulstilles til standard.')) return;
+  state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+  saveState(); renderAll();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'neminventar-cashflow.json';
+  a.click();
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      state = JSON.parse(e.target.result);
+      saveState(); renderAll();
+      alert('Data importeret ✅');
+    } catch { alert('Ugyldig JSON fil'); }
+  };
+  reader.readAsText(file);
+}
+
+// =====================================================================
+// DATE DISPLAY
+// =====================================================================
+document.getElementById('dash-date').textContent = new Date().toLocaleDateString('da-DK', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+});
+
+// =====================================================================
+// KEYBOARD
+// =====================================================================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+
+// =====================================================================
+// INIT
+// =====================================================================
+renderAll();
+</script>
+</body>
+</html>
