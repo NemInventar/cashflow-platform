@@ -63,7 +63,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSy
 
 /* METRICS CARDS */
 .metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-.metric-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;cursor:pointer}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .15s,transform .1s}
+.metric-card:hover{border-color:var(--blue);transform:translateY(-2px)}
 .metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .metric-card.balance::before{background:linear-gradient(90deg,var(--blue),var(--purple))}
 .metric-card.income::before{background:linear-gradient(90deg,var(--green),#16a34a)}
@@ -247,17 +248,17 @@ select.form-input{cursor:pointer}
         <div class="metric-sub" id="m-balance-sub">–</div>
         <div class="metric-edit-hint">Klik for at ændre →</div>
       </div>
-      <div class="metric-card income">
+      <div class="metric-card income" onclick="showPage('invoices')" title="Gå til fakturaer">
         <div class="metric-label">Kommende Indkomst</div>
         <div class="metric-value positive" id="m-income">–</div>
         <div class="metric-sub" id="m-income-sub">–</div>
       </div>
-      <div class="metric-card expense">
+      <div class="metric-card expense" onclick="showPage('fixed')" title="Gå til faste udgifter">
         <div class="metric-label">Månedlige Faste</div>
         <div class="metric-value negative" id="m-fixed">–</div>
         <div class="metric-sub" id="m-fixed-sub">–</div>
       </div>
-      <div class="metric-card invest">
+      <div class="metric-card invest" onclick="showPage('investment')" title="Gå til Kosovo Fabrik">
         <div class="metric-label">Kosovo Fabrik Mål</div>
         <div class="metric-value yellow" id="m-invest">–</div>
         <div class="progress-bar"><div class="progress-fill" id="m-invest-bar" style="background:var(--yellow);width:0%"></div></div>
